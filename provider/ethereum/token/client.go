@@ -104,6 +104,11 @@ var nativeTokenMap = map[uint64]metadata.Token{
 		Symbol:   "ETH",
 		Decimals: 18,
 	},
+	uint64(network.EthereumChainIDXLayer): {
+		Name:     "OKB",
+		Symbol:   "OKB",
+		Decimals: 18,
+	},
 }
 
 var _ Client = (*client)(nil)
@@ -656,7 +661,7 @@ func (c *client) buildCacheKey(chainID uint64, address common.Address, id *big.I
 	var key string
 
 	// Only support Ethereum Virtual Machine (EVM) chain.
-	key = fmt.Sprintf("tokens:ethereum::%d:%s", chainID, address)
+	key = fmt.Sprintf("tokens:ethereum:%d:%s", chainID, address)
 
 	if id != nil {
 		key = fmt.Sprintf("%s:%s", key, id)

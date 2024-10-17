@@ -1,0 +1,93 @@
+environment: production
+
+discovery:
+    operator:
+      evm_address: 0x...address
+      signature: 0x...signature
+    server:
+      endpoint: https://some.node.com
+      global_indexer_endpoint: https://gi.rss3.io
+      access_token: your_access_token
+
+database:
+  coverage_period: 3
+  driver: postgres
+  partition: true
+  uri: postgres://postgres:password@rss3_node_database:5432/postgres
+
+redis:
+  endpoint: rss3_node_redis:6379
+  username:
+  password:
+
+endpoints:
+  farcaster:
+    url: https://nemes.farcaster.xyz:2281
+  ethereum:
+    url: https://rpc.ankr.com/eth
+  polygon:
+    url: https://rpc.ankr.com/polygon
+  avax:
+    url: https://rpc.ankr.com/avalanche
+  optimism:
+    url: https://rpc.ankr.com/optimism
+  arbitrum:
+    url: https://rpc.ankr.com/arbitrum
+  gnosis:
+    url: https://rpc.ankr.com/gnosis
+  linea:
+    url: https://rpc.linea.build
+  savm:
+    url: https://alpha-rpc-node-http.svmscan.io
+  binance-smart-chain:
+    url: https://rpc.ankr.com/bsc
+  base:
+    url: https://rpc.ankr.com/base
+    http2_disabled: true
+  crossbell:
+    url: https://rpc.crossbell.io
+  vsl:
+    url: https://rpc.rss3.io
+  arweave:
+    url: https://arweave.net
+
+component:
+  rss:
+    id: rss-rsshub
+    network: rss
+    worker: rsshub
+    endpoint: https://your.rsshub.com/
+    parameters:
+      authentication:
+        access_key:
+  decentralized:
+    # ethereum
+    - id: ethereum-core
+      network: ethereum
+      worker: core
+      endpoint: ethereum
+      parameters:
+    - id: polygon-lens
+      network: polygon
+      worker: lens
+      endpoint: polygon
+      ipfs_gateways:
+        - https://ipfs.io
+      parameters:
+    # farcaster
+    - id: farcaster-core
+      network: farcaster
+      worker: core
+      endpoint: farcaster
+    # arweave
+    - id: arweave-mirror
+      network: arweave
+      endpoint: arweave
+      worker: mirror
+      ipfs_gateways:
+      parameters:
+    - id: arweave-momoka
+      network: arweave
+      worker: momoka
+      endpoint: polygon
+      parameters:

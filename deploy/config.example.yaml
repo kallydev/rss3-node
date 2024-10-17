@@ -1,411 +1,88 @@
+# `environment` is the environment of the Node, possible values are `development` and `production`.
+# DO NOT change this value except for local debugging purposes.
 environment: production
-type: beta
 
+# `discovery` is used for Node discovery and verification.
 discovery:
-    maintainer:
-      evm_address:
-      signature:
-    server:
-      endpoint:
-      global_indexer_endpoint:
+  operator:
+    # `evm_address` is the wallet address used during your registration on the RSS3 Explorer.
+    evm_address: 0x...address
+    # The `signature` obtained during registration, it will be used to verify your ownership of this Node.
+    # You MUST NOT share the signature with anyone.
+    signature: 0x...signature
+  server:
+    # `endpoint` is how how Global Indexers access your Node.
+    # You can use a domain or an IP address.
+    endpoint: https://your.node.com
+    # If your Node is registered on the VSL Testnet, use https://gi.rss3.dev.
+    # Otherwise, DO NOT change this value.
+    global_indexer_endpoint: https://gi.rss3.io
+    # Use access_token to protect your Node from unauthorized access.
+    access_token: your_access_token
 
+# Database configuration
 database:
-  driver: cockroachdb
+  # `coverage_period` is the number of months that the database will store the data, which cannot be less than three months.
+  coverage_period: 3
+  # `driver` is the database driver used by the Node, currently only `postgres` is supported
+  driver: postgres
+  # `partition` is used to enable the partition feature of the database.
   partition: true
-  uri: postgres://root@localhost:26257/node
+  # `uri` is the connection string of the database.
+  uri: postgres://postgres:password@localhost:5432/postgres
 
-stream:
-  enable: false
-  driver: kafka
-  topic: rss3.node.activities
-  uri: localhost:9092
-
+# Deploying a redis will significantly improve the indexing performance of some workers.
 redis:
-  endpoints:
-    - localhost:6379
+  endpoint: localhost:6379
   username:
   password:
-  disable_cache: true
-  tls:
-    enabled: false
-    ca_file: /path/to/ca.crt
-    cert_file: /path/to/client.crt
-    key_file: /path/to/client.key
-    insecure_skip_verify: false
 
-observability:
-  opentelemetry:
-    metrics:
-      enable: true
-      endpoint: 0.0.0.0:9090
-    traces:
-      enable: true
-      insecure: true
-      endpoint: localhost:4318
-
+# `endpoints` are data access points for Workers.
+# Endpoints defined here can be referenced in the configuration below.
+# For example,
+# - Blockchain networks require RPC endpoints,
+# - Arweave requires a gateway endpoint,
+# - Farcaster requires a Hubble.
 endpoints:
-  ethereum:
-    url: https://rpc.ankr.com/eth
-  base:
-    url: https://rpc.ankr.com/base
-    http2_disabled: true
+  vsl:
+    url: https://rpc.rss3.io
+  arweave:
+    url: https://arweave.net
 
+# `component` is used to split different types of networks.
 component:
+  # `rss` network type includes the worker indexing data in RSS format.
   rss:
-    - network: rss
-      endpoint: https://rsshub.app/
-      parameters:
-        authentication:
-          access_key:
-
+    id: rss-rsshub
+    network: rss
+    worker: rsshub
+    endpoint: https://your.rsshub.com/
+    parameters:
+      authentication:
+        access_key:
+  # `decentralized` network type includes workers indexing data from decentralized networks such as blockchain networks, Arweave, etc.
   decentralized:
-    - id: ethereum-core
-      network: ethereum
+    # Each configuration here initializes a worker.
+    # `id` is the unique identifier
+    - id: vsl-core
+      # `network` is the network that the worker is indexing from.
+      network: vsl
+      # `endpoint` is the data access endpoint used by the worker.
+      # You can reference the endpoint defined above in the `endpoints` section.
+      # You can also use a direct URL, such as `https://rpc.rss3.io`.
+      endpoint: vsl
+      # `worker` is the actual worker that processes the data.
+      # You can find the list of available workers here: https://github.com/RSS3-Network/Node/blob/develop/README.md#supported-networks-and-workers.
       worker: core
-      endpoint: ethereum
-      parameters:
-        block_start:
-    - id: ethereum-rss3
-      network: ethereum
-      worker: rss3
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-        block_target:
-    - id: polygon-lens
-      network: polygon
-      worker: lens
-      endpoint: https://rpc.ankr.com/polygon
-      ipfs_gateways:
-      parameters:
-        block_start:
-    - id: ethereum-opensea
-      network: ethereum
-      worker: opensea
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: ethereum-uniswap
-      network: ethereum
-      worker: uniswap
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: ethereum-optimism
-      network: ethereum
-      worker: optimism
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: polygon-aavegotchi
-      network: polygon
-      worker: aavegotchi
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-          block_start: 48300005
-    - id: ethereum-highlight
-      network: ethereum
-      worker: highlight
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: arbitrum-highlight
-      network: arbitrum
-      worker: highlight
-      endpoint: https://rpc.ankr.com/arbitrum
-      parameters:
-        block_start:
-    - id: polygon-highlight
-      network: polygon
-      worker: highlight
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-          block_start:
-    - id: optimism-highlight
-      network: optimism
-      worker: highlight
-      endpoint: https://rpc.ankr.com/optimism
-      parameters:
-        block_start:
-    - id: crossbell-crossbell
-      network: crossbell
-      worker: crossbell
-      endpoint: https://rpc.crossbell.io
-      parameters:
-        block_start:
-    # farcaster
-    - id: farcaster-core
-      network: farcaster
-      worker: core
-      endpoint: https://nemes.farcaster.xyz:2281
-      parameters:
-        api_key:
-    # arweave
     - id: arweave-mirror
       network: arweave
+      endpoint: arweave
       worker: mirror
-      endpoint: https://arweave.net/
+      # `ipfs_gateways` is used to specify the IPFS gateways used by the worker.
+      # Supplying multiple gateways may improve the indexing performance and reliability.
       ipfs_gateways:
+        - https://ipfs.io
+        - https://cloudflare-ipfs.com
       parameters:
-        block_start:
-        concurrent_block_requests:
-    - id: arweave-paragraph
-      network: arweave
-      worker: paragraph
-      endpoint: https://arweave.net/
-      ipfs_gateways:
-      parameters:
-        block_start:
-        concurrent_block_requests:
-    - id: ethereum-looksrare
-      network: ethereum
-      worker: looksrare
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: polygon-matters
-      network: polygon
-      worker: matters
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-        block_start:
-    - id: arweave-momoka
-      network: arweave
-      worker: momoka
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-        block_start:
-        concurrent_block_requests:
-    - id: ethereum-aave
-      network: ethereum
-      endpoint: https://rpc.ankr.com/eth
-      worker: aave
-      parameters:
-        block_start:
-    - id: polygon-aave
-      network: polygon
-      endpoint: https://rpc.ankr.com/polygon
-      worker: aave
-      parameters:
-        block_start:
-    - id: avax-aave
-      network: avax
-      endpoint: https://rpc.ankr.com/avalanche
-      worker: aave
-      parameters:
-        block_start:
-    - id: base-aave
-      network: base
-      endpoint: https://rpc.ankr.com/base
-      worker: aave
-      parameters:
-        block_start:
-    - id: optimism-aave
-      network: optimism
-      endpoint: https://rpc.ankr.com/optimism
-      worker: aave
-      parameters:
-        block_start:
-    - id: arbitrum-aave
-      network: arbitrum
-      endpoint: https://rpc.ankr.com/arbitrum
-      worker: aave
-      parameters:
-        block_start:
-    - id: polygon-iqwiki
-      network: polygon
-      worker: iqwiki
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-        block_start:
-    - id: ethereum-lido
-      network: ethereum
-      endpoint: https://rpc.ankr.com/eth
-      worker: lido
-      parameters:
-        block_start:
-    - id: ethereum-ens
-      network: ethereum
-      endpoint: https://rpc.ankr.com/eth
-      worker: ens
-      parameters:
-        block_start:
-    - id: ethereum-1inch
-      network: ethereum
-      worker: 1inch
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: vsl-core
-      network: vsl
-      endpoint: https://rpc.rss3.io
-      worker: core
-      parameters:
-        block_start:
-    - id: optimism-kiwistand
-      network: optimism
-      endpoint: https://rpc.ankr.com/optimism
-      worker: kiwistand
-      parameters:
-        block_start:
-    - id: savm-core
-      network: savm
-      endpoint: https://alpha-rpc-node-http.svmscan.io
-      worker: core
-      parameters:
-        block_start:
-    - id: savm-uniswap
-      network: savm
-      endpoint: https://alpha-rpc-node-http.svmscan.io
-      worker: uniswap
-      parameters:
-        block_start:
-    - id: savm-savm
-      network: savm
-      endpoint: https://alpha-rpc-node-http.svmscan.io
-      worker: savm
-      parameters:
-        block_start:
-    - id: optimism-core
-      network: optimism
-      endpoint: https://rpc.ankr.com/optimism
-      worker: core
-      parameters:
-        block_start:
-    - id: polygon-core
-      network: polygon
-      endpoint: https://rpc.ankr.com/polygon
-      worker: core
-      parameters:
-        block_start:
-    - id: arbitrum-core
-      network: arbitrum
-      endpoint: https://rpc.ankr.com/arbitrum
-      worker: core
-      parameters:
-        block_start:
-    - id: base-core
-      network: base
-      endpoint: base
-      worker: core
-      parameters:
-        block_start:
-    - id: binance-smart-chain-core
-      network: binance-smart-chain
-      endpoint: https://rpc.ankr.com/bsc
-      worker: core
-      parameters:
-        block_start: 34436412
-        concurrent_block_requests: 1
-    - id: gnosis-core
-      network: gnosis
-      endpoint: https://rpc.ankr.com/gnosis
-      worker: core
-      parameters:
-        block_start:
-    - id: linea-core
-      network: linea
-      endpoint: https://rpc.linea.build
-      worker: core
-      parameters:
-          block_start:
-    - id: linea-uniswap
-      network: linea
-      endpoint: https://rpc.linea.build
-      worker: uniswap
-      parameters:
-        block_start:
-    - id: vsl-rss3
-      network: vsl
-      endpoint: https://rpc.rss3.io
-      worker: rss3
-    - id: ethereum-vsl
-      network: ethereum
-      worker: vsl
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: ethereum-stargate
-      network: ethereum
-      worker: stargate
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: arbitrum-stargate
-      network: arbitrum
-      worker: stargate
-      endpoint: https://rpc.ankr.com/arbitrum
-      parameters:
-        block_start:
-    - id: linea-stargate
-      network: linea
-      endpoint: https://rpc.linea.build
-      worker: stargate
-      parameters:
-        block_start:
-    - id: binance-smart-chain-stargate
-      network: binance-smart-chain
-      endpoint: https://rpc.ankr.com/bsc
-      worker: stargate
-      parameters:
-        block_start:
-    - id: base-stargate
-      network: base
-      endpoint: https://developer-access-mainnet.base.orgss
-      worker: stargate
-      parameters:
-        block_start:
-    - id: optimism-stargate
-      network: optimism
-      endpoint: https://rpc.ankr.com/optimism
-      worker: stargate
-      parameters:
-        block_start:
-    - id: polygon-stargate
-      network: polygon
-      worker: stargate
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-        block_start:
-    - id: avax-stargate
-      network: avax
-      endpoint: https://rpc.ankr.com/avalanche
-      worker: stargate
-      parameters:
-        block_start:
-    - id: ethereum-curve
-      network: ethereum
-      worker: curve
-      endpoint: https://rpc.ankr.com/eth
-      parameters:
-        block_start:
-    - id: arbitrum-curve
-      network: arbitrum
-      worker: curve
-      endpoint: https://rpc.ankr.com/arbitrum
-      parameters:
-        block_start:
-    - id: avax-curve
-      network: avax
-      endpoint: https://rpc.ankr.com/avalanche
-      worker: curve
-      parameters:
-        block_start:
-    - id: gnosis-curve
-      network: gnosis
-      endpoint: https://rpc.ankr.com/gnosis
-      worker: curve
-      parameters:
-        block_start:
-    - id: optimism-curve
-      network: optimism
-      worker: curve
-      endpoint: https://rpc.ankr.com/optimism
-      parameters:
-        block_start:
-    - id: polygon-curve
-      network: polygon
-      worker: curve
-      endpoint: https://rpc.ankr.com/polygon
-      parameters:
-        block_start:
+        # `concurrent_block_requests` is used to specify the number of concurrent block requests.
+        concurrent_block_requests: 2

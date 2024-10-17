@@ -3,12 +3,13 @@ package database
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pressly/goose/v3"
 	"github.com/rss3-network/node/internal/database/model"
 	"github.com/rss3-network/node/internal/engine"
-	mirror_model "github.com/rss3-network/node/internal/engine/worker/contract/mirror/model"
+	mirror_model "github.com/rss3-network/node/internal/engine/worker/decentralized/contract/mirror/model"
 	activityx "github.com/rss3-network/protocol-go/schema/activity"
 	"github.com/rss3-network/protocol-go/schema/network"
 	"go.uber.org/zap"
@@ -28,6 +29,7 @@ type Client interface {
 	SaveActivities(ctx context.Context, activities []*activityx.Activity) error
 	FindActivity(ctx context.Context, query model.ActivityQuery) (*activityx.Activity, *int, error)
 	FindActivities(ctx context.Context, query model.ActivitiesQuery) ([]*activityx.Activity, error)
+	DeleteExpiredActivities(ctx context.Context, network network.Network, timestamp time.Time) error
 }
 
 type Session interface {

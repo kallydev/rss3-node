@@ -1,7 +1,20 @@
 version: 2
 updates:
-  - package-ecosystem: "gomod"
-    directory: "/"
+  - package-ecosystem: gomod
+    directory: /
     schedule:
-      interval: "daily"
-    target-branch: "main"
+      interval: weekly
+    target-branch: main
+    ignore:
+      - dependency-name: "github.com/ethereum/go-ethereum"
+      - dependency-name: "github.com/rss3-network/protocol-go"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: main
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: main

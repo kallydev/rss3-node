@@ -16,12 +16,13 @@ import (
 
 func (b *Broadcaster) Register(ctx context.Context) error {
 	request := RegisterNodeRequest{
-		Address:   b.config.Discovery.Maintainer.EvmAddress,
-		Signature: b.config.Discovery.Maintainer.Signature,
-		Endpoint:  b.config.Discovery.Server.Endpoint,
-		Stream:    b.config.Stream,
-		Config:    b.config.Component,
-		Type:      b.config.Type,
+		Address:     b.config.Discovery.Operator.EvmAddress,
+		Signature:   b.config.Discovery.Operator.Signature,
+		Endpoint:    b.config.Discovery.Server.Endpoint,
+		AccessToken: b.config.Discovery.Server.AccessToken,
+		Stream:      b.config.Stream,
+		Config:      b.config.Component,
+		Type:        "production",
 	}
 
 	var response any
@@ -39,9 +40,9 @@ func (b *Broadcaster) Register(ctx context.Context) error {
 
 func (b *Broadcaster) Heartbeat(ctx context.Context) error {
 	request := NodeHeartbeatRequest{
-		Address:   b.config.Discovery.Maintainer.EvmAddress,
+		Address:   b.config.Discovery.Operator.EvmAddress,
 		Endpoint:  b.config.Discovery.Server.Endpoint,
-		Signature: b.config.Discovery.Maintainer.Signature,
+		Signature: b.config.Discovery.Operator.Signature,
 		Timestamp: time.Now().Unix(),
 	}
 
@@ -95,19 +96,22 @@ func (b *Broadcaster) sendRequest(ctx context.Context, path string, values url.V
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %s, response: %s", resp.Status, result)
+		marshal, _ := json.Marshal(result)
+
+		return fmt.Errorf("unexpected status: %s, response: %s", resp.Status, string(marshal))
 	}
 
 	return nil
 }
 
 type RegisterNodeRequest struct {
-	Address   common.Address    `json:"address" validate:"required"`
-	Signature string            `json:"signature" validate:"required"`
-	Endpoint  string            `json:"endpoint" validate:"required"`
-	Stream    *config.Stream    `json:"stream,omitempty"`
-	Config    *config.Component `json:"config,omitempty"`
-	Type      string            `json:"type" validate:"required"`
+	Address     common.Address    `json:"address" validate:"required"`
+	Signature   string            `json:"signature" validate:"required"`
+	Endpoint    string            `json:"endpoint" validate:"required"`
+	AccessToken string            `json:"access_token,omitempty"`
+	Stream      *config.Stream    `json:"stream,omitempty"`
+	Config      *config.Component `json:"config,omitempty"`
+	Type        string            `json:"type" validate:"required"`
 }
 
 type NodeHeartbeatRequest struct {
